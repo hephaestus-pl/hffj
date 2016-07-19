@@ -23,6 +23,9 @@ Inductive FormalArg :=
 Definition fargType (f: FormalArg):ClassName := 
   match f with FArg t _ => t end.
 
+Definition fargName (f: FormalArg): id := 
+  match f with FArg _ i => i end.
+
 Inductive Constructor :=
   | KDecl : id -> [FormalArg] -> [Argument] -> [Assignment] -> Constructor.
 
@@ -55,6 +58,7 @@ Parameter CT: @partial_map ClassDecl.
 (*We will assume a global CT to make our definitions easier
  *To instance the CT use Hypothesis x: CT = ... *)
 
+(*Auxiliaries*)
 Reserved Notation "C '<:' D " (at level 40).
 Inductive Subtype : id -> ClassName -> Prop :=
   | S_Refl: forall C: ClassName, C <: C
@@ -79,27 +83,56 @@ Inductive fields : id -> [FieldDecl] -> Prop :=
      find C CT = Some (CDecl C D fs K mds) ->
      fields D fs' ->
      fields C (fs'++fs).
+Hint Constructors fields.
 
-Reserved Notation "'mtype(' m ',' D ')' '=' c '~>' c0" (at level 40).
-Inductive m_type (m: id) (C: ClassName) (Bs: [ClassName]) (B: ClassName) : Prop:=
-  | mty_ok : forall D Fs K Ms fargs,
+Inductive ty : Type :=
+  | ty_var : ClassName -> ty
+  | ty_fun : [ClassName] -> ClassName -> ty.
+
+Notation "'#' t" :=  (ty_var t) (at level 40).
+Notation "t '~>' t'" :=  (ty_fun t t') (at level 40).
+Hint Constructors ty.
+
+(*Reserved Notation "'mtype(' m ',' D ')' '=' t" (at level 40).*)
+Inductive m_type: id -> ClassName -> ty -> Prop :=
+  | mt_self : forall C D B Bs Fs K m Ms fargs e,
               find C CT = Some (CDecl C D Fs K Ms)->
-              In m (keys Ms) -> 
+              find m Ms = Some (MDecl B m fargs e) ->
               map fargType fargs = Bs ->
-              mtype(m, C) = Bs ~> B
-  | mty_no_override: forall D Fs K Ms fargs,
+              m_type m C (Bs ~> B)
+  | mt_super : forall C D Fs K m Ms t,
               find C CT = Some (CDecl C D Fs K Ms)->
-              ~In m (keys Ms) ->
-              map fargType fargs = Bs ->
-              mtype(m, D) = Bs ~> B ->
-              mtype(m, C) = Bs ~> B
-  where "'mtype(' m ',' D ')' '=' c '~>' c0"
-        := (m_type m D c c0).
+              find m Ms = None ->
+              m_type m D t ->
+              m_type m C t.
+(*
+  where "'mtype(' m ',' D ')' '=' t"
+        := (m_type m D c c0 t).
+*)
 
 Hint Constructors m_type.
 Tactic Notation "mty_cases" tactic(first) ident(c) :=
   first;
-  [ Case_aux c "mty_ok" | Case_aux c "mty_no_override"].
+  [ Case_aux c "mt_self" | Case_aux c "mt_super"].
+
+Inductive m_body (m: id) (C: ClassName) (xs: [id]) (e: Exp) : Prop:=
+  | mb_self : forall D B Fs K Ms fargs,
+              find C CT = Some (CDecl C D Fs K Ms) ->
+              In m (keys Ms) ->
+              find m Ms = Some (MDecl B m fargs e) ->
+              map fargName fargs = xs ->
+              m_body m C xs e
+  | mb_super: forall D Fs K Ms fargs,
+              find C CT = Some (CDecl C D Fs K Ms) ->
+              ~In m (keys Ms) ->
+              map fargName fargs = xs ->
+              m_body m D xs e ->
+              m_body m C xs e.
+
+Hint Constructors m_body.
+Tactic Notation "mbody_cases" tactic(first) ident(c) :=
+  first;
+  [ Case_aux c "mb_self" | Case_aux c "mb_super"].
 
 Definition Bind := @partial_map Exp.
 
@@ -112,7 +145,6 @@ Fixpoint subst (e: Exp) (v: Var) (v': Exp) : Exp:=
   | ExpCast cname exp => ExpCast cname (subst exp v v')
   | ExpNew cname exps => ExpNew cname (map (fun x => subst x v v') exps)
   end.
-
 Notation " '[' v ':=' v' ']' e " := (subst e v v') (at level 40).  
 
 

@@ -10,3 +10,4 @@ Lemma ex: (ClassId 1 <: ClassObject).
   eauto.
 Qed.
 
+Eval compute in ([ (Id 1) := ExpFieldAccess (ExpVar this) (Id 2)] ExpVar (Id 1)).

@@ -13,6 +13,7 @@
 Require Omega.   (* needed for using the [omega] tactic *)
 Require Export Bool.
 Require Export List.
+Import ListNotations.
 Require Export Arith.
 Require Export Arith.EqNat.  (* Contains [beq_nat], among other things *)
 Import ListNotations.
@@ -56,7 +57,7 @@ Proof.
   destruct i1. destruct i2.
   assert (n <> n0).
     intros C. subst. apply H. reflexivity.
-  apply beq_nat_false_iff. assumption.  Qed.
+  apply <- Nat.eqb_neq. assumption.  Qed.
 
 Theorem beq_id_sym: forall i1 i2,
   beq_id i1 i2 = beq_id i2 i1.
@@ -168,9 +169,45 @@ Proof.
     rewrite not_eq_beq_id_false; auto.
 Qed.
 
-Lemma find_dec : forall (A: Set) k1 d (v:option A),
-  {find k1 d = Some v} + {find k1 d = None}.
+Lemma key_iff_find: forall (A: Set) k d (x: A),
+  In k (keys d) <-> find k d =(Some x).
 Proof.
+  intros.
+  split. admit.
+
+  intro.
+  apply find_iff_findi in H.
+  induction d. inversion H.
+  inversion H. subst.
+  left. reflexivity.
+  subst.
+  right. auto.
+Admitted.
+
+Lemma key_iffn_find: forall (A: Set) k (d: @partial_map A),
+  ~In k (keys d) <-> find k d = None.
+Proof.
+  intros.
+  split.
+  induction d.
+  intro. auto.
+  intro.
+  simpl in H.
+  apply find_iff_findi.
+  constructor. admit. (*usar demorgan aqui*)
+  
+  apply find_iff_findi. apply IHd. admit. (*usar demorgan aqui*)
+
+  intro.
+  apply find_iff_findi in H.
+  induction d. inversion H.
+  intro.
+  simpl in H1; inversion H1.
+  intro.
+  inversion H. subst.
+  apply IHd; auto.
+  destruct H0; auto.
+  apply False_ind; auto.
 Admitted.
 
 Class Referable (a: Set) :={

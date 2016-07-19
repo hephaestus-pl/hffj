@@ -61,19 +61,35 @@ Qed.
 
 Lemma A11: forall m D C Cs C0,
           C <: D ->
-          mtype(m,D) = Cs ~> C0 ->
-          mtype(m,C) = Cs ~> C0.
+          m_type m D (Cs ~> C0) ->
+          m_type m C (Cs ~> C0).
 Proof with eauto.
   intros m D C Cs C0 H.
   subtype_cases (induction H) Case...
   Case "S_Decl".
     intros.
+    destruct in_dec with (l:= keys mds) (a:= m); try(inversion H0).
+    exact eq_id_dec.  
+    apply -> key_iff_find in i. eauto.
+    apply -> key_iff_find in i. eapply mt_self; eauto.
+    apply -> key_iffn_find in n. eauto.
+    destruct in_dec with (l:= keys mds) (a:= m).
+    exact eq_id_dec. 
+    apply -> key_iff_find in i. eapply mt_self; eauto.
+    apply -> key_iffn_find in n. eauto.
+
+
+    eapply mt_self; eauto.
+      | eapply mt_super; eauto
+      ]).
+
+
+
     inversion H0; (destruct in_dec with (l:= keys mds) (a:= m);
       [ exact eq_id_dec 
-      | eapply mty_ok; eauto 
-      | eapply mty_no_override; eauto
+      | eapply mt_self; eauto 
+      | eapply mt_super; eauto
       ]).
 Qed.
 
 
-Eval compute in ([ (Id 1) := ExpFieldAccess (ExpVar this) (Id 2)] ExpVar (Id 1)).
