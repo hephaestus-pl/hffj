@@ -98,11 +98,26 @@ Fixpoint keys {A: Set} (d: @partial_map A) : list id :=
   | record k _ d' => k :: keys d'
   end.
 
-Inductive findi {A: Set} : id -> (@partial_map A) -> option A -> Prop:=
-  | find_empty : forall key, findi key empty None
-  | find_head : forall key v d, findi key (record key v d) (Some v)
+Inductive findi {A: Set} : id -> (@partial_map A) -> A -> Prop:=
+  | find_head : forall key v d, findi key (record key v d) (v)
   | find_step : forall k1 k2 v d x, 
     k1 <> k2 -> findi k1 d x -> findi k1 (record k2 v d) x.
+
+Lemma findi_empty: forall (A: Set) k (v: A),
+  ~findi k empty v.
+Proof.
+  intros A k v H.
+  inversion H.
+Qed.
+
+Lemma findi_diff_val: forall (A: Set) (v1 v2: A) key d,
+  v1 <> v2 -> ~findi key (record key v1 d) (v2).
+Proof.
+  intros. intro H1.
+  inversion H1; subst.
+  apply H; auto.
+  apply H6; auto.
+Qed.
 
 Lemma update_eq : forall (A: Set) (d: partial_map) (k: id) (v: A),
   find k (update d k v) = Some v.
@@ -138,14 +153,15 @@ Proof with eauto.
   inversion H.
 Qed.
 
-Lemma find_iff_findi: forall (A: Set) d (k1: id) (x1: option A),
-  find k1 d = x1 <-> findi k1 d x1.
+Lemma find_iff_findi: forall (A: Set) d (k1: id) (x1: A),
+  find k1 d = Some x1 <-> findi k1 d x1.
 Proof.
   intros. split.
   intro H. 
   induction d.
     inversion H.
-    simpl. constructor.
+(*
+    simpl. constructor. *)
 
     destruct eq_id_dec with (i1:= k1) (i2:= i).
     rewrite e in H; simpl in H. rewrite <- beq_id_refl in H.
@@ -162,7 +178,6 @@ Proof.
 
   intro.
   induction H.
-    auto.
     simpl. 
     rewrite <- beq_id_refl. auto.
     unfold find.
@@ -173,7 +188,13 @@ Lemma key_iff_find: forall (A: Set) k d (x: A),
   In k (keys d) <-> find k d =(Some x).
 Proof.
   intros.
-  split. admit.
+  split. 
+  intro.
+  apply find_iff_findi.
+  induction d.
+  simpl in H. contradiction H.
+  
+admit.
 
   intro.
   apply find_iff_findi in H.
