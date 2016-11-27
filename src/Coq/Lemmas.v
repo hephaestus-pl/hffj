@@ -107,33 +107,11 @@ Lemma subtype_fields: forall C D fs ,
 Proof.
 Admitted.
 
-Lemma Forall2_exi: forall (A B: Type) (P: A -> B -> Prop) (Q: B -> B -> Prop) xs ys,
-  Forall2 (fun x y => exists y', Q y' y /\ P x y') xs ys ->
-  exists ys', Forall2 Q ys' ys /\ Forall2 P xs ys'.
-Admitted.
-
-Lemma Forall2_map: forall (A B: Type) (P: A -> B -> Prop) (f: A -> A) xs ys,  
-  Forall2 (fun x => P (f x)) xs ys ->
-  Forall2 P (map f xs) ys.
-Admitted.
-
-Lemma Forall2_trans: forall (A: Type) (P: A -> A -> Prop) xs ys zs,
-  Forall2 P xs ys ->
-  Forall2 P ys zs ->
-  (forall x y z, P x y -> P y z -> P x z) (* P is transitive *) ->
-  Forall2 P xs zs.
-Admitted.
-
 Lemma subtype_not_sub: forall C D E,
   ~ C <: D ->
   ~ D <: C ->
     E <: D ->
   ~ E <: C.
-Admitted.
-
-Lemma subtype_LEM: forall C D,
-  C <: D \/ ~ C <: D.
-Proof.
 Admitted.
 
 Theorem term_subst_preserv_typing : forall Gamma xs (Bs: [ClassName]) D ds As e,

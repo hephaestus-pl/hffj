@@ -117,6 +117,10 @@ Tactic Notation "subtype_cases" tactic(first) ident(c) :=
   [ Case_aux c "S_Refl" | Case_aux c "S_Trans" 
   | Case_aux c "S_Decl"].
 
+Axiom subtype_LEM: forall C D,
+  C <: D \/ ~ C <: D.
+
+
 Inductive fields : id -> [FieldDecl] -> Prop :=
  | F_Obj : fields Object nil
  | F_Decl : forall C D fs  noDupfs K mds noDupMds fs', 

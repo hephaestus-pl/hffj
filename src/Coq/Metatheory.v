@@ -365,6 +365,28 @@ Proof.
   apply IHForall2 with n; auto.
 Qed.
 
+Lemma Forall2_exi: forall (Q: B -> B -> Prop) xs ys,
+  Forall2 (fun x y => exists y', Q y' y /\ P x y') xs ys ->
+  exists ys', Forall2 Q ys' ys /\ Forall2 P xs ys'.
+Proof.
+  intros. induction H. exists (@nil B); split; constructor.
+  destruct H as [z]. destruct H. destruct IHForall2 as [zs]. destruct H2.
+  exists (z :: zs). split; constructor; auto.
+Qed.
+
+Lemma Forall2_map: forall (f: A -> A) xs ys,  
+  Forall2 (fun x => P (f x)) xs ys ->
+  Forall2 P (map f xs) ys.
+Admitted.
+
+
+Lemma Forall2_trans: forall (A: Type) (P: A -> A -> Prop) xs ys zs,
+  Forall2 P xs ys ->
+  Forall2 P ys zs ->
+  RelationClasses.Transitive P ->
+  Forall2 P xs zs.
+Admitted.
+
 End Two_predicate.
 
 (** * From Basics.v *)
