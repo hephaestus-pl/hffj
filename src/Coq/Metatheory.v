@@ -377,8 +377,10 @@ Qed.
 Lemma Forall2_map: forall (f: A -> A) xs ys,  
   Forall2 (fun x => P (f x)) xs ys ->
   Forall2 P (map f xs) ys.
-Admitted.
-
+Proof.
+  intros. induction H. simpl; auto.
+  simpl in *. constructor; auto.
+Qed.
 
 Lemma Forall2_trans: forall (A: Type) (P: A -> A -> Prop) xs ys zs,
   Forall2 P xs ys ->
